@@ -8,11 +8,11 @@ const null_attr = Dict{AbstractString, Any}("NULL" => true)
 
 # general objects
 function attribute_value(x)
-    r = Dict{ASCIIString, Any}()
+    r = Dict{String, Any}()
     for e=fieldnames(x)
         r[string(e)] = null_or_val(x.(e))
     end
-    Dict{ASCIIString, Any}("M" => r)
+    Dict{String, Any}("M" => r)
 end
 
 # TODO -- binary?
@@ -29,11 +29,11 @@ attribute_value{T <: AbstractString}(x :: Set{T}) =
 # TODO -- n-dimensional arrays
 
 function attribute_value(x :: Dict)
-    dict = Dict{ASCIIString, Any}()
+    dict = Dict{String, Any}()
     for (k,v)=x
         dict[string(k)] = null_or_val(v)
     end
-    Dict{ASCIIString, Any}("M" => dict)
+    Dict{String, Any}("M" => dict)
 end
 
 null_or_val(x) = x == nothing ? null_attr : attribute_value(x)
