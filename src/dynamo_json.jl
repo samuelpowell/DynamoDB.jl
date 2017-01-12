@@ -10,7 +10,7 @@ const null_attr = Dict{AbstractString, Any}("NULL" => true)
 function attribute_value(x)
     r = Dict{String, Any}()
     for e=fieldnames(x)
-        r[string(e)] = null_or_val(x.(e))
+        r[string(e)] = null_or_val(getfield(x,e))
     end
     Dict{String, Any}("M" => r)
 end
