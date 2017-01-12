@@ -1,5 +1,6 @@
-using AWS
+using AWSCore
 using DynamoDB
+using JSON
 using Base.Test
 
 type Foo

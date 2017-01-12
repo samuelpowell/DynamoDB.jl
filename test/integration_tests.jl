@@ -8,10 +8,10 @@ end
 
 # These keys only give access to the JULIA_TESTING table. They are included on purpose.
 # See the bottom of this file for more information.
-const env = AWSEnv(;id="AKIAJE6VHSX64EMJUAJA", key="ktpHIUI2vfYSgXStr+NCy0HN8fHgQdw6SgvbhHky")
+aws = aws_config(region="eu-west-1")
 
 # could also be done using a julia Type or Immutable if you prefer
-const table = dynamo_table(Dict, "JULIA_TESTING", :id, :order; env=env)
+const table = dynamo_table(Dict, "JULIA_TESTING", :id, :order; env=aws)
 
 # unique key for testing purposes
 const id_key = random_key()
