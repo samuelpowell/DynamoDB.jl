@@ -3,14 +3,11 @@
 module DynamoDB
 
 using Compat
-using AWS
+using AWSCore
+using SymDict
 using Requests
-import JSON
 
-include("crypto.jl")
-
-# TODO -- kill this file when AWS.jl adds support for specified payloads
-include("dynamo_requests.jl")
+using JSON
 
 include("dynamo_json.jl")
 include("dynamo_dsl.jl")
@@ -40,5 +37,23 @@ export no_conditions, size, begins_with, contains, is_string, is_string_set, is_
        is_binary, is_binary_set, is_bool, is_null, is_list, is_map, is_document, exists, not_exists,
        <, >, <=, >=, eq, !=, and, or, !, not, between
 export get_or_else, append_to_list, assign, add_to_set, remove_from_set, delete
+
+
+# Execute request using AWSCore as per https://github.com/dls/DynamoDB.jl/issues/4
+function dynamo_execute(aws, operation, query; current_retry=0)
+  
+  result = AWSCore.do_request(@SymDict(
+    service  = "dynamodb",
+    verb     = "POST",
+    url      = aws_endpoint("dynamodb", aws[:region]),
+    resource = "/",
+    headers  = Dict("x-amz-target" => "DynamoDB_20120810.$operation",
+                    "Content-Type" => "application/x-amz-json-1.0"),
+                    content  = json(query),
+                    aws...))
+
+    return (200, result)
+end
+
 
 end # module

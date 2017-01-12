@@ -1,5 +1,27 @@
 # DynamoDB.jl
 
+TL;DR: Julia interface to AWS DynamoDB using [AWSCore.jl](https://github.com/samoconnor/AWSCore.jl)
+
+## Fork details
+
+This code is a fork of [Conning/DynamoDB.jl](https://github.com/Conning/DynamoDB.jl)
+which applies Julia 0.5 compatibility updates to the original codebase,
+[dls/DynamoDB](https://github.com/dls/DynamoDB.jl), which now appears stale.
+
+This fork replaces the use of [JuliaCloud/AWS.jl](https://github.com/JuliaCloud/AWS.jl)
+with [samoconnor/AWSCore.jl](https://github.com/samoconnor/AWSCore.jl) whose
+master branch is fully compatible with Julia 0.5.
+
+## Installation and testing
+
+You will require the `master` branch of [samoconnor/AWSCore.jl](https://github.com/samoconnor/AWSCore.jl).
+Configuration of AWS credentials is achieved according to the documentation for
+`aws_config` in `AWSCore.jl`. Tests can be run in the usual way, though online
+testing of DynamoDB requires you to create a DynamoDB table with name `JULIA_TESTING`
+a primary key `id` of string type, and a secondary index `order` of number type.
+
+# Original documentation
+
 Linux, OSX: [![Build Status](https://travis-ci.org/dls/DynamoDB.jl.svg?branch=master)](https://travis-ci.org/dls/DynamoDB.jl)
 
 Windows: [![Build status](https://ci.appveyor.com/api/projects/status/qwlfcnnx0i1cti11?svg=true)](https://ci.appveyor.com/project/dls/dynamodb-jl)
