@@ -40,9 +40,9 @@ export get_or_else, append_to_list, assign, add_to_set, remove_from_set, delete
 
 
 # Execute request using AWSCore as per https://github.com/dls/DynamoDB.jl/issues/4
-function dynamo_execute(aws, operation, query; current_retry=0)
-  
-  result = AWSCore.do_request(@SymDict(
+function dynamo_execute(aws, operation, query)
+
+  AWSCore.do_request(@SymDict(
     service  = "dynamodb",
     verb     = "POST",
     url      = aws_endpoint("dynamodb", aws[:region]),
@@ -52,7 +52,6 @@ function dynamo_execute(aws, operation, query; current_retry=0)
                     content  = json(query),
                     aws...))
 
-    return (200, result)
 end
 
 

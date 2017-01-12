@@ -11,7 +11,7 @@ end
 aws = aws_config(region="eu-west-1")
 
 # could also be done using a julia Type or Immutable if you prefer
-const table = dynamo_table(Dict, "JULIA_TESTING", :id, :order; env=aws)
+const table = dynamo_table(Dict, "JULIA_TESTING", :id, :order)
 
 # unique key for testing purposes
 const id_key = random_key()
@@ -19,7 +19,7 @@ const id_key = random_key()
 # let's load some data
 for i=1:26:260
     # the POST api takes a max of 25 items at once, DynamoDB.jl multiplexes client-side
-    batch_put_item(table,
+    batch_put_item(aws, table,
                    Dict("id" => id_key, "order" => i + 0),
                    Dict("id" => id_key, "order" => i + 1),
                    Dict("id" => id_key, "order" => i + 2),
@@ -48,51 +48,51 @@ for i=1:26:260
                    Dict("id" => id_key, "order" => i + 25))
 end
 
-itr = query(table, id_key, between(attr("order"), 14, 16); consistant_read=true)
+itr = query(aws, table, id_key, between(attr("order"), 14, 16); consistant_read=true)
 items = task_to_array(itr)
 @test length(items) == 3 # 14, 15, and 16
 items[2]["order"] = 200
 items[2]["some_new_field"] = "another value we might want"
 items[2]["sub_doc"] = Dict("a" => 1, "b" => 2)
 
-put_item(table, items[2]) # writes the value as a *new* item.
+put_item(aws, table, items[2]) # writes the value as a *new* item.
 
 items[2]["some_new_field"] = "secondary value"
-@test put_item(table, items[2]; return_old=true)["some_new_field"] == "another value we might want"
+@test put_item(aws, table, items[2]; return_old=true)["some_new_field"] == "another value we might want"
 
-itr = query(table, id_key, between(attr("order"), 14, 16); consistant_read=true)
+itr = query(aws, table, id_key, between(attr("order"), 14, 16); consistant_read=true)
 items = task_to_array(itr)
 @test length(items) == 3
 
 
-item = get_item(table, id_key, 200)
+item = get_item(aws, table, id_key, 200)
 @test item["some_new_field"] == "secondary value"
 @test item["sub_doc"] == Dict("a" => 1, "b" => 2)
 
 
-update_item(table, id_key, 200, assign(attr("sub_doc", "c"), 3))
+update_item(aws, table, id_key, 200, assign(attr("sub_doc", "c"), 3))
 
 
-item = get_item(table, id_key, 200)
+item = get_item(aws, table, id_key, 200)
 @test item["some_new_field"] == "secondary value"
 @test item["sub_doc"] == Dict("a" => 1, "b" => 2, "c" => 3)
 
 
-delete_item(table, id_key, 200)
-@test get_item(table, id_key, 200) == nothing
+delete_item(aws, table, id_key, 200)
+@test get_item(aws, table, id_key, 200) == nothing
 
 
-items = batch_get_item(table, (id_key, 1), (id_key, 2), (id_key, 3), (id_key, 200))
+items = batch_get_item(aws, table, (id_key, 1), (id_key, 2), (id_key, 3), (id_key, 200))
 @assert length(items) == 3 # since 200 was deleted
 
-items = batch_get_item(table, (id_key, 1), (id_key, 2), (id_key, 3), (id_key, 200);
+items = batch_get_item(aws, table, (id_key, 1), (id_key, 2), (id_key, 3), (id_key, 200);
                        only_returning=[attr("id")])
 @assert length(items) == 3 # since 200 was deleted
 
 
 # look at some random items in the table. without a limit this goes on forever
 # ... hopefully 6k is enough to exercise the rate limiting and retrying code :)
-for e=scan(table; limit=60_000)
+for e=scan(aws, table; limit=60_000)
     @assert e["id"] != nothing
     @assert e["order"] != nothing
 end
@@ -100,8 +100,8 @@ end
 
 
 # cleanup. the projection asks DynamoDB to only return the order attribute to us.
-for e = query(table, id_key; projection=[attr("order")])
-    delete_item(table, id_key, e["order"])
+for e = query(aws, table, id_key; projection=[attr("order")])
+    delete_item(aws, table, id_key, e["order"])
 end
 
 
