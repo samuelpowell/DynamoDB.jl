@@ -1,5 +1,7 @@
 # DynamoDB.jl
 
+TL;DR: Julia interface to AWS DynamoDB using [AWSCore.jl](https://github.com/samoconnor/AWSCore.jl)
+
 ## Fork details
 
 This code is a fork of [Conning/DynamoDB.jl](https://github.com/Conning/DynamoDB.jl)
