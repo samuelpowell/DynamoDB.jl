@@ -60,6 +60,7 @@ real_val(val :: Real) = val
 real_val(val :: AbstractString) = parse(Float64, val)
 
 function value_from_attributes(hash :: Dict)
+
     ks = keys(hash)
     if length(ks) != 1
         error("multiple type keys provided in DynamoDB typed JSON value")
@@ -72,8 +73,8 @@ function value_from_attributes(hash :: Dict)
     elseif ty == "BOOL" ; return bool_val(val)
     elseif ty == "N"    ; return real_val(val)
     elseif ty == "S"    ; return val
-    elseif ty == "L"    ; return [value_from_attributes(e) for e=val]
-    elseif ty == "NS"   ; return Set{Real}([float(e) for e=val])
+    elseif ty == "L"    ; return [value_from_attributes(e) for e in val]
+    elseif ty == "NS"   ; return Set{Real}([float(e) for e in val])
     elseif ty == "SS"   ; return Set{AbstractString}(val)
     elseif ty == "M"
         m = Dict{AbstractString, Any}()
@@ -87,11 +88,14 @@ function value_from_attributes(hash :: Dict)
 end
 
 function value_from_attributes(ty :: Type, typed_json :: Dict)
-    if ty == Dict
-        return value_from_attributes(Dict("M" => typed_json))
+
+    vals = value_from_attributes(Dict("M" => typed_json))
+
+    if ty <: Dict
+      return vals
+    else
+      init_vals = [vals[string(e)] for e=fieldnames(ty)]
+      return ty(init_vals...)
     end
 
-    vals = value_from_attributes(typed_json)
-    init_vals = [vals[string(e)] for e=fieldnames(ty)]
-    ty(init_vals...)
 end
