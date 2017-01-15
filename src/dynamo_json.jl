@@ -61,9 +61,6 @@ real_val(val :: AbstractString) = parse(Float64, val)
 
 function value_from_attributes(hash :: Dict)
 
-    println("DDB DEBUG:::", hash, keys(hash), length(keys(hash)))
-
-
     ks = keys(hash)
     if length(ks) != 1
         error("multiple type keys provided in DynamoDB typed JSON value")
@@ -100,5 +97,5 @@ function value_from_attributes(ty :: Type, typed_json :: Dict)
       init_vals = [vals[string(e)] for e=fieldnames(ty)]
       return ty(init_vals...)
     end
-    
+
 end
