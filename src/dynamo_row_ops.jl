@@ -84,7 +84,7 @@ end
 # note: you can only fetch 100 items at a time with this API
 # TODO: multiplex calls to fix this client side?
 
-type BatchGetItemPart
+mutable struct BatchGetItemPart
     table :: DynamoTable
     keys
     only_returning
@@ -230,7 +230,7 @@ end
 # TODO: ReturnConsumedCapacity
 # TODO: ReturnItemCollectionMetrics
 
-type BatchWriteItemPart
+mutable struct BatchWriteItemPart
     table :: DynamoTable
     keys_to_delete
     items_to_write
@@ -403,24 +403,24 @@ function update_item(aws::AWSConfig,
 
 end
 
-function update_item{T <: DynamoUpdateExpression}(aws::AWSConfig,
-                                                  table::DynamoTable,
-                                                  key,
-                                                  range,
-                                                  update_expression::T;
-                                                  conditions=no_conditions()::CEBoolean,
-                                                  returning=RETURN_NONE)
+function update_item(aws::AWSConfig,
+                     table::DynamoTable,
+                     key,
+                     range,
+                     update_expression::T;
+                     conditions=no_conditions()::CEBoolean,
+                     returning=RETURN_NONE) where T <: DynamoUpdateExpression
 
   update_item(aws, table, key, range, [update_expression]; conditions=conditions, returning=returning)
 
 end
 
-function update_item{T <: DynamoUpdateExpression}(aws::AWSConfig,
-                                                  table::DynamoTable,
-                                                  key,
-                                                  update_expression::T;
-                                                  conditions=no_conditions()::CEBoolean,
-                                                  returning=RETURN_NONE)
+function update_item(aws::AWSConfig,
+                     table::DynamoTable,
+                     key,
+                     update_expression::T;
+                     conditions=no_conditions()::CEBoolean,
+                     returning=RETURN_NONE) where T <: DynamoUpdateExpression
 
     update_item(aws, table, key, nothing, [update_expression]; conditions=conditions, returning=returning)
 

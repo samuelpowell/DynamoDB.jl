@@ -19,7 +19,7 @@
 
 random_key() = string(Base.Random.uuid4())
 
-immutable DynamoTable
+struct DynamoTable
     ty :: Type
     name :: AbstractString
     hash_key_name :: AbstractString
@@ -34,7 +34,7 @@ dynamo_table(ty :: Type, name, hash_key_name; extension=nothing) =
     DynamoTable(ty, string(name), string(hash_key_name), nothing, extension)
 
 
-immutable DynamoLocalIndex
+struct DynamoLocalIndex
     parent :: DynamoTable
     index_name :: AbstractString
     range_key_name :: AbstractString
@@ -44,7 +44,7 @@ dynamo_local_index(parent :: DynamoTable, index_name, range_key_name) =
     DynamoLocalIndex(parent, string(index_name), string(range_key_name))
 
 
-immutable DynamoGlobalIndex
+struct DynamoGlobalIndex
     parent :: DynamoTable
     index_name :: AbstractString
     hash_key_name :: AbstractString
@@ -62,7 +62,7 @@ dynamo_global_index(parent :: DynamoTable, index_name, hash_key_name) =
 
 # subclass this type, and override these functions to define global
 # custom behaviors for one or more of your dynamo tables
-abstract DynamoExtension
+abstract type DynamoExtension end
 
 row_write_conditions(extension, table :: DynamoTable, value) = no_conditions()
 row_delete_conditions(extension, table :: DynamoTable) = no_conditions()

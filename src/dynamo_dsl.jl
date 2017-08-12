@@ -22,10 +22,10 @@
 
 
 # a reference to a dynamodb record field
-abstract DynamoValue
-abstract DynamoReference <: DynamoValue
+abstract type DynamoValue end
+abstract type DynamoReference <: DynamoValue end
 
-immutable DynamoAttribute <: DynamoReference
+struct DynamoAttribute <: DynamoReference
     name :: AbstractString
 end
 attribute(name :: AbstractString) = DynamoAttribute(name)
@@ -35,14 +35,14 @@ attr(name :: Symbol) = attribute(name)
 
 
 # a reference to dynamo sub-documents... eg "foo.bar" in {foo => {bar => 3}}
-immutable NestedDynamoAttribute <: DynamoReference
+struct NestedDynamoAttribute <: DynamoReference
     attrs :: Array{DynamoAttribute}
 end
 attribute(names...) = NestedDynamoAttribute([attr(e) for e=names])
 attr(names...) = attribute(names...)
 
 
-immutable DynamoListElement <: DynamoReference
+struct DynamoListElement <: DynamoReference
     attr :: DynamoReference
     idx
 end
@@ -51,7 +51,7 @@ getindex(attr :: DynamoReference, idx :: Int64) = DynamoListElement(attr, idx)
 getindex(attr :: DynamoReference, idx :: Int32) = DynamoListElement(attr, idx)
 
 
-immutable DynamoLiteralValue <: DynamoValue
+struct DynamoLiteralValue <: DynamoValue
     val
 end
 value_or_literal(a :: DynamoValue) = a
@@ -74,33 +74,33 @@ value_or_literal(other) = DynamoLiteralValue(other)
 # https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Expressions.SpecifyingConditions.html
 # https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/ExpressionPlaceholders.html
 
-abstract CEBoolean
-abstract CEFnVal
-typealias CEVal Union{DynamoValue, CEFnVal}
+abstract type CEBoolean end
+abstract type CEFnVal end
+const  CEVal  =  Union{DynamoValue, CEFnVal}
 
-immutable CETrue <: CEBoolean ; end
+struct CETrue <: CEBoolean ; end
 no_conditions() = CETrue()
 
-immutable CESize <: CEFnVal
+struct CESize <: CEFnVal
     attr :: DynamoReference
 end
 import Base.size
 size(attr :: DynamoReference) = CESize(attr)
 
-immutable CEBeginsWith <: CEBoolean
+struct CEBeginsWith <: CEBoolean
     attr :: DynamoReference
     val
 end
 begins_with(attr :: DynamoReference, val) = CEBeginsWith(attr, value_or_literal(val))
 
-immutable CEContains <: CEBoolean
+struct CEContains <: CEBoolean
     attr :: DynamoReference
     val
 end
 import Base.contains
 contains(attr :: DynamoReference, val) = CEContains(attr, value_or_literal(val))
 
-immutable CEAttributeType <: CEBoolean
+struct CEAttributeType <: CEBoolean
     attr :: DynamoReference
     ty :: AbstractString
 end
@@ -116,17 +116,17 @@ is_list(attr :: DynamoReference) = CEAttributeType(attr, "L")
 is_map(attr :: DynamoReference) = CEAttributeType(attr, "M")
 is_document(attr :: DynamoReference) = CEAttributeType(attr, "M")
 
-immutable CEExists <: CEBoolean
+struct CEExists <: CEBoolean
     attr :: DynamoReference
 end
 exists(attr :: DynamoReference) = CEExists(attr)
 
-immutable CENotExists <: CEBoolean
+struct CENotExists <: CEBoolean
     attr :: DynamoReference
 end
 not_exists(attr :: DynamoReference) = CENotExists(attr)
 
-immutable CEBinaryOp <: CEBoolean
+struct CEBinaryOp <: CEBoolean
     op :: AbstractString
     lhs
     rhs
@@ -181,7 +181,7 @@ or(lhs :: DynamoReference, rhs :: CEBoolean) = CEBinaryOp("OR", lhs, rhs)
 or(lhs :: CEBoolean, rhs :: DynamoReference) = CEBinaryOp("OR", lhs, rhs)
 or(lhs :: DynamoReference, rhs :: DynamoReference) = CEBinaryOp("OR", lhs, rhs)
 
-immutable CENot <: CEBoolean
+struct CENot <: CEBoolean
     exp
 end
 
@@ -191,7 +191,7 @@ import Base.(!)
 not(exp :: CEBoolean) = CENot(exp)
 not(exp :: DynamoAttribute) = CENot(exp)
 
-immutable CEBetween <: CEBoolean
+struct CEBetween <: CEBoolean
     attr :: DynamoAttribute
     min
     max
@@ -223,41 +223,41 @@ between(attr :: DynamoAttribute, min, max) =
 # DELETE
 
 
-abstract DynamoUpdateExpression
-abstract DUFnVal
-typealias DUVal Union{DynamoValue, DUFnVal}
+abstract type DynamoUpdateExpression end
+abstract type DUFnVal end
+const  DUVal  =  Union{DynamoValue, DUFnVal}
 
-immutable DefaultValue <: DUFnVal
+struct DefaultValue <: DUFnVal
     attr :: DynamoReference
     val
 end
 get_or_else(attr :: DynamoReference, val) = DefaultValue(attr, value_or_literal(val))
 
-immutable ListAppend <: DynamoUpdateExpression
+struct ListAppend <: DynamoUpdateExpression
     attr :: DynamoReference
     val
 end
 append_to_list(attr :: DynamoReference, val) = ListAppend(attr, value_or_literal(val))
 
-immutable AssignExpression <: DynamoUpdateExpression
+struct AssignExpression <: DynamoUpdateExpression
     attr :: DynamoReference
     val
 end
 assign(attr :: DynamoReference, val) = AssignExpression(attr, value_or_literal(val))
 
-immutable SetAddExpression <: DynamoUpdateExpression
+struct SetAddExpression <: DynamoUpdateExpression
     attr :: DynamoReference
     val
 end
 add_to_set(attr :: DynamoAttribute, val) = SetAddExpression(attr, value_or_literal(val))
 
-immutable SetRemoveExpression <: DynamoUpdateExpression
+struct SetRemoveExpression <: DynamoUpdateExpression
     attr :: DynamoReference
     val
 end
 remove_from_set(attr :: DynamoReference, val) = SetRemoveExpression(attr, value_or_literal(val))
 
-immutable DeleteExpression <: DynamoUpdateExpression
+struct DeleteExpression <: DynamoUpdateExpression
     attr :: DynamoReference
 end
 delete(attr :: DynamoReference) = DeleteExpression(attr)
@@ -271,7 +271,7 @@ delete(attr :: DynamoReference) = DeleteExpression(attr)
 
 # Dictionary of references, used to keep the serialization orderly and
 # compact.
-type DynamoAttrAndValReferences
+mutable struct DynamoAttrAndValReferences
     gensym_n :: Int64
 
     attrs
@@ -281,7 +281,7 @@ type DynamoAttrAndValReferences
     vals_reversed # used to avoid double-sending duplicate values
 end
 
-type UpdateWriter
+mutable struct UpdateWriter
     refs :: DynamoAttrAndValReferences
 
     sets :: Array{Any}
