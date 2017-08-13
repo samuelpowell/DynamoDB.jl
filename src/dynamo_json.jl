@@ -22,9 +22,9 @@ attribute_value(x :: AbstractString) = Dict{AbstractString, Any}("S" => x)
 
 attribute_value(x :: Array) =
     Dict{AbstractString, Any}("L" => [attribute_value(e) for e=x])
-attribute_value{T <: Real}(x :: Set{T}) =
+attribute_value(x :: Set{T}) where {T <: Real} =
     Dict{AbstractString, Any}("NS" => [string(e) for e=x])
-attribute_value{T <: AbstractString}(x :: Set{T}) =
+attribute_value(x :: Set{T}) where {T <: AbstractString} =
     Dict{AbstractString, Any}("SS" => [e for e=x])
 # TODO -- n-dimensional arrays
 

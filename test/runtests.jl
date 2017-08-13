@@ -3,7 +3,7 @@ using DynamoDB
 using JSON
 using Base.Test
 
-type Foo
+mutable struct Foo
     a
     b
 end
